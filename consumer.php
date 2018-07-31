@@ -10,7 +10,7 @@ use redisq\RedisQueue;
 require_once __DIR__ . "/vendor/autoload.php";
 
 $redis = new Redis();
-$redis->connect("121.199.182.2", 30005, 10);
+$redis->connect("121.199.182.2", 30005, 30);
 $redis->auth("y2Xs0fAZ8WHWQj0V");
 
 $queue = new RedisQueue($redis, "testQueue");
