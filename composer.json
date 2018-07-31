@@ -1,0 +1,21 @@
+{
+    "name": "jiaozi/redis-queue",
+    "type": "library",
+    "authors": [
+        {
+            "name": "jiaozi",
+            "email": "www@zeroplace.cn"
+        }
+    ],
+    "require": {
+        "php" : ">=5.6",
+        "ext-redis" : "*",
+        "psr/log" : "^1.0",
+        "monolog/monolog": "^1.23"
+    },
+    "autoload" : {
+        "psr-4" : {
+            "redisq\\" : "./src/"
+        }
+    }
+}
