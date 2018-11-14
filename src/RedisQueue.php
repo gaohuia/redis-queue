@@ -9,6 +9,7 @@ namespace redisq;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 
 class RedisQueue
@@ -21,6 +22,7 @@ class RedisQueue
     private $queueKey;
     private $stop = false;
     private $maxDelivery = 1;
+    private $dataPrefix = 'queue_item_:';
 
     /**
      * @var \Redis
@@ -110,7 +112,8 @@ class RedisQueue
 
     private function push($queueItem)
     {
-        $this->redis->rPush($this->queueKey, serialize($queueItem));
+        $data = $this->dataPrefix . serialize($queueItem);
+        $this->redis->rPush($this->queueKey, $data);
     }
 
     /**
@@ -140,7 +143,17 @@ class RedisQueue
         while (!$this->stop) {
             $pop = $this->redis->blPop([$this->queueKey], $this->timeout);
             if (!empty($pop)) {
-                $data = unserialize($pop[1]);
+                $prefixLength = strlen($this->dataPrefix);
+                if (substr($pop[1], 0, $prefixLength) != $this->dataPrefix) {
+                    // we just ignore the illegal data
+                    $this->getLogger()->warning("Illegal data: " . $pop[1]);
+                    continue;
+                }
+
+                $data = unserialize(substr($pop[1], $prefixLength));
+                if (false === $data) {
+                    $this->getLogger()->warning("Failed to unserialize the data, data: ". $pop[1]);
+                }
 
                 $this->getLogger()->info("取得任务: {$data['name']}, 进入处理");
                 $callbackRet = (int)call_user_func($callback, $data['body'], $data['meta'], $data['name']);
